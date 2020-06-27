@@ -6,9 +6,9 @@ namespace ExternalEditor
 {
     enum TextType
     {
-        MISC,
+        UNKNOWN,
         ACS,
-        DIALOGUE
+        DIALOGUE // Dialogue
     }
     public class MainForm : Form
     {
@@ -35,6 +35,12 @@ namespace ExternalEditor
             InitializeComponents();
             ResumeLayout();
             PerformLayout();
+        }
+
+        ~MainForm()
+        {
+            string tempDir = GetTempDirectory();
+            Directory.Delete(tempDir, true);
         }
 
         private void InitializeComponents()
@@ -74,16 +80,34 @@ namespace ExternalEditor
             });
         }
 
-        string GetFilePath(string wadName, string mapName, TextType textType = TextType.MISC)
+        string GetTempDirectory()
         {
-            string editDirPath = "/tmp/UDB";
+            string tempDir = Path.GetTempPath();
+            char sep = Path.DirectorySeparatorChar;
+            if (string.IsNullOrEmpty(tempDir))
+            {
+                tempDir = "/tmp"; // Unix folder for temporary files
+            }
+            return $"{tempDir}{sep}UDB";
+        }
+
+        string GetFilePath(string wadName, string mapName, TextType textType = TextType.UNKNOWN)
+        {
+            string[] extensions = {
+                "txt",
+                "acs",
+                "dlg",
+            };
+            char sep = Path.DirectorySeparatorChar;
+            string editDirPath = GetTempDirectory();
             if (!Directory.Exists(editDirPath))
             {
                 Directory.CreateDirectory(editDirPath);
             }
-            string editFileName = "SCRIPTS.{0}.{1}.{2}";
-            string fileName = string.Format(editFileName, wadName, mapName, textType.ToString());
-            return editDirPath + Path.DirectorySeparatorChar + fileName;
+            string editFileName = "{0}.{1}.{2}";
+            string extension = extensions[(int)textType];
+            string fileName = string.Format(editFileName, wadName, mapName, extension);
+            return $"{editDirPath}{sep}{fileName}";
         }
 
         void EditButton_Click(object sender, EventArgs e)
