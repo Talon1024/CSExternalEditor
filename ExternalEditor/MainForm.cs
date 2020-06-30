@@ -159,6 +159,9 @@ namespace ExternalEditor
                 Console.Error.Write(ex);
             }
             // ========== Display file contents in the text box ==========
+            // Also, perform any actions configured to run after the editor is
+            // closed, like compile the ACS script(s) if the editor was editing
+            // an ACS script.
             textBox.Text = script;
         }
 
