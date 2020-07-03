@@ -110,6 +110,50 @@ namespace ExternalEditor
             return $"{editDirPath}{sep}{fileName}";
         }
 
+        ProcessStartInfo GetEditor(string filePath)
+        {
+            // Get EDITOR environment variable
+            string editCommand = Environment.GetEnvironmentVariable("EDITOR");
+            // To be replaced later
+            string editor;
+            string arguments = "";
+            // Find quote marks, if they exist
+            char quoteMark = (char) 0;
+            if(editCommand.StartsWith("\""))
+            {
+                quoteMark = '"';
+            }
+            else if(editCommand.StartsWith("'"))
+            {
+                quoteMark = '\'';
+            }
+            int quoteEnd = 0;
+            if(quoteMark > 0)
+            {
+                quoteEnd = editCommand.IndexOf(quoteMark, 1);
+                // Text between quotes
+                editor = editCommand.Substring(1, quoteEnd - 2);
+                // Text after quotes
+                arguments = editCommand.Substring(quoteEnd + 1);
+            }
+            else
+            {
+                char[] whitespace = {' ', '\t', '\n'};
+                string[] editorInfo = editCommand.Split(whitespace, 2);
+                editor = editorInfo[0];
+                if(editorInfo.Length > 1)
+                {
+                    arguments = editorInfo[1];
+                }
+            }
+            arguments += $" {filePath}";
+            ProcessStartInfo startInfo = new ProcessStartInfo {
+                FileName = editor,
+                Arguments = arguments
+            };
+            return startInfo;
+        }
+
         void EditButton_Click(object sender, EventArgs e)
         {
             if (editorRunning)
@@ -124,13 +168,10 @@ namespace ExternalEditor
             writer.Write(script);
             writer.Close();
             // ========== Open file in editor ==========
-            ProcessStartInfo editorStartInfo = new ProcessStartInfo { 
-                FileName = "atom",
-                Arguments = $"-w {filePath}"
-            };
+            ProcessStartInfo editorStartInfo = GetEditor(filePath);
             Process editorProcess = new Process
             {
-                EnableRaisingEvents = true,
+                EnableRaisingEvents = true, // So that the host app can do stuff with the text once the user is done editing it
                 StartInfo = editorStartInfo
             };
             editorProcess.Exited += EditorProcess_Exited;
