@@ -174,9 +174,12 @@ namespace ExternalEditor
                 EnableRaisingEvents = true, // So that the host app can do stuff with the text once the user is done editing it
                 StartInfo = editorStartInfo
             };
-            editorProcess.Exited += EditorProcess_Exited;
             editorProcess.Start();
             editorRunning = !editorProcess.HasExited;
+            if(editorRunning)
+            {
+                editorProcess.Exited += EditorProcess_Exited;
+            }
         }
 
         void EditorProcess_Exited(object sender, EventArgs e)
